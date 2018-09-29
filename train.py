@@ -61,7 +61,7 @@ def main(params):
         train_dataset, params['batch_size'], shuffle=True, collate_fn=collate_fn)
 
     """
-    #Validation dataset and Validation dataloader
+    # Validation dataset and Validation dataloader
     val_data = np.transpose(val_data, (0, 3, 1, 2))
     val_dataset = torch.utils.data.TensorDataset(
         torch.FloatTensor(val_data), torch.LongTensor(val_anno))
@@ -84,10 +84,10 @@ def main(params):
         print("Starting from the bottom")
 
     print("Training the model ...")
-    #hyperparameter, optimizer, criterion
+    # hyperparameter, optimizer, criterion
     learning_rate = params['lr']
-    optimizer = torch.optim.Adam(densenet.parameters(
-    ), learning_rate, weight_decay=params['l2_reg'])
+    optimizer = torch.optim.RMSprop(
+        densenet.parameters(), learning_rate, weight_decay=params['l2_reg'])
     criterion = nn.CrossEntropyLoss()
 
     for epoch in range(params['max_epoch']):
@@ -113,6 +113,10 @@ def main(params):
             print("Epoch: %d, Steps:[%d/%d], Loss: %.4f" %
                   (epoch, i, len(train_loader), loss.data))
 
+        learning_rate *= 0.995
+        optimizer = torch.optim.RMSprop(
+            densenet.parameters(), learning_rate, weight_decay=params['l2_reg'])
+
         if (epoch+1) % 10 == 0:
             print("Saved the model")
             torch.save(densenet.state_dict(), params['model_save'])
@@ -130,8 +134,8 @@ if __name__ == '__main__':
 
     # lr, l2_reg, max_epoch, lr_decay, deacy_every,
     parser.add_argument('--batch_size', default=5, type=int)
-    parser.add_argument('--lr', default=1e-4, type=float)
-    parser.add_argument('--l2_reg', default=1e-5, type=float)
+    parser.add_argument('--lr', default=1e-3, type=float)
+    parser.add_argument('--l2_reg', default=1e-4, type=float)
     parser.add_argument('--max_epoch', default=100, type=int)
     parser.add_argument('--num_answers', default=12, type=int)
 
